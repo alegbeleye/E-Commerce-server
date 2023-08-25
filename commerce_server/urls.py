@@ -16,13 +16,14 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from commerce.views import CustomerView, ProductView, SignInView
+from commerce.views import CustomerView, ProductView, AuthView, TokenValidationView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/customers/<str:id>/', CustomerView.as_view()),
+    path('api/customers/<int:id>/', CustomerView.as_view()),
     path('api/customers/', CustomerView.as_view()),
-    path('api/products/<str:id>/', ProductView.as_view()),
+    path('api/products/<int:id>/', ProductView.as_view()),
     path('api/products/', ProductView.as_view()),
-    path('api/auth/signin/', SignInView.as_view())
+    path('api/customers/auth/', AuthView.as_view()),
+    path('api/customers/auth/token/', TokenValidationView.as_view())
 ]
