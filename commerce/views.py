@@ -32,15 +32,7 @@ class CustomerView(APIView):
     
 
 
-class ProductView(APIView):
-    def get(self, request, id):
-        try:
-            data = Product.objects.get(pk=id)
-        except Product.DoesNotExist:
-            return Response("This product does not exist.", status=status.HTTP_404_NOT_FOUND)
-        serialized_product = ProductSerializer(data)
-        return Response(serialized_product.data, status=status.HTTP_200_OK)
-    
+class ProductsView(APIView):
     def get(self, request):
         try:
             products = Product.objects.all()
@@ -62,35 +54,27 @@ class ProductView(APIView):
         else:
             return Response("Sorry an issue Occured saving the product.", status=status.HTTP_400_BAD_REQUEST)
         return Response("Created product", status=status.HTTP_201_CREATED)
-    
-    def delete(self, request, id):
-        try:
-            data = Product.objects.get(pk=id)
-        except Product.DoesNotExist:
-            return Response('The product does not exist', status=status.HTTP_404_NOT_FOUND)
-        data.delete()
-        return Response("Deleted Product", status=status.HTTP_200_OK)
 
 
-
-class AuthView(APIView):
-
-    def get(self, request) -> None:
-        sign_in_details = request.data
-        try:
-            customer = Customer.objects.get(email = sign_in_details['email'])
-        except Customer.DoesNotExist:
-            return Response("Email or Password is incorrect", status=status.HTTP_404_NOT_FOUND)
-        
-        if customer.compare_password(sign_in_details['password']):
-            serialized_customer = CustomerSerializer(customer)
-            token  = generate_token(serialized_customer.data['id'])
-            response = Response(serialized_customer.data, status=status.HTTP_200_OK)
-            response['Authorization'] = token 
+class ProductView(APIView):
+        def get(self, request, id):
+            try:
+                data = Product.objects.get(pk=id)
+            except Product.DoesNotExist:
+                return Response("This product does not exist.", status=status.HTTP_404_NOT_FOUND)
+            serialized_product = ProductSerializer(data)
+            response = Response(serialized_product.data, status=status.HTTP_200_OK)
             return response
-        else:
-            return Response("Email or Password is incorrect", status=status.HTTP_400_BAD_REQUEST)
-    
+        
+        def delete(self, request, id):
+            try:
+                data = Product.objects.get(pk=id)
+            except Product.DoesNotExist:
+                return Response('The product does not exist', status=status.HTTP_404_NOT_FOUND)
+            data.delete()
+            return Response("Deleted Product", status=status.HTTP_200_OK)
+
+class SignUpView(APIView):
     def post(self, request):
         data = request.data
         serialized_customer = CustomerSerializer(data=data)
@@ -99,18 +83,35 @@ class AuthView(APIView):
             customer_instance.hash_password(customer_instance.hashed_password)
             customer_instance.save()
         else:
-            return Response("Invalid Request.", status=status.HTTP_400_BAD_REQUEST)
+            return Response("Invalid Request.", status=status.HTTP_401_UNAUTHORIZED)
         
         token  = generate_token(serialized_customer.data['id'])
         response = Response(serialized_customer.data, status=status.HTTP_201_CREATED)
         response['Authorization'] = token 
         return response
-        
+
+class SignInView(APIView):
+        def post(self, request) -> None:
+            sign_in_details = request.data
+            try:
+                customer = Customer.objects.get(email = sign_in_details['email'])
+            except Customer.DoesNotExist:
+                return Response("Email or Password is incorrect", status=status.HTTP_401_UNAUTHORIZED)
+            
+            if customer.compare_password(sign_in_details['password']):
+                serialized_customer = CustomerSerializer(customer)
+                token  = generate_token(serialized_customer.data['id'])
+                response = Response(serialized_customer.data, status=status.HTTP_200_OK, headers={'Authorization':token})
+                response['Authorization'] = token 
+                return response
+            else:
+                return Response("Email or Password is incorrect", status=status.HTTP_401_UNAUTHORIZED)
+
 class TokenValidationView(APIView):
     def post(self, request):
         encoded_token = request.headers.get('Authorization')
         if (not encoded_token):
-            return Response({"errror":"No token Recieved"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"errror":"No token Recieved"}, status=status.HTTP_401_UNAUTHORIZED)
         
         response = decode_token(encoded_token=encoded_token)
         return response

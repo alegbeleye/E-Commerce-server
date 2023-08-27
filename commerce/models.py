@@ -30,7 +30,6 @@ class Product(models.Model):
 
 
 class Customer(models.Model):
-    id = models.CharField(max_length=2000, primary_key=True)
     email = models.CharField(max_length=500)
     first_name = models.CharField(max_length=500)
     last_name = models.CharField(max_length=500)

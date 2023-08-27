@@ -23,7 +23,7 @@ def generate_token(customer_id:str) -> dict:
     return token
 
 def decode_token(encoded_token: str) -> Response:
-    encoded_token = encoded_token[7:]
+    encoded_token = encoded_token.removeprefix('Bearer')
     print(encoded_token)
     try:
         decoded_token = jwt.decode(encoded_token, secret_key, algorithms="HS256")
